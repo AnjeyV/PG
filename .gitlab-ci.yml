@@ -1,0 +1,29 @@
+default:
+  tags:
+    - kubernetes
+
+stages:
+  - download_and_run
+
+variables:
+  DMTOOLS_VERSION: "v1.4.51" # Define the version as a variable
+
+download_and_run_job:
+  stage: download_and_run
+  image: openjdk:23 # Use an appropriate Java image
+  cache:
+    key: "$CI_PROJECT_NAME-download-cache-${DMTOOLS_VERSION}"
+    paths:
+      - dmtools.jar
+
+  script:
+    # Check if dmtools.jar exists
+    - if [ ! -f dmtools.jar ]; then
+        echo "Downloading JAR file for version ${DMTOOLS_VERSION}...";
+        curl -L -o dmtools.jar https://github.com/IstiN/dmtools/releases/download/${DMTOOLS_VERSION}/dmtools-${DMTOOLS_VERSION}-all.jar;
+      else
+        echo "Using cached JAR file for version ${DMTOOLS_VERSION}.";
+      fi
+    - echo "Running Java class com.github.istin.dmtools.job.UrlEncodedJobTrigger..."
+    - java -cp dmtools.jar com.github.istin.dmtools.job.UrlEncodedJobTrigger "$JOB_PARAMS"
+  allow_failure: false
